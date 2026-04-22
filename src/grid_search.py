@@ -1,18 +1,17 @@
 from typing import Tuple, List
 from geometry import Point, Polygon, BoundingBox
-from geometry_utils import shift_polygon
 from hausdorff_distance import hausdorff_with_witness
 
 
 def grid_search(A: Polygon, B: Polygon, Q0: BoundingBox, steps: int) -> Tuple[Point, float, List[Tuple[float, float, float]]]:
-    xmin, xmax = Q0[0], Q0[1]
-    ymin, ymax = Q0[2], Q0[3] 
+    xmin, xmax, ymin, ymax = Q0 
     
     best_x = None
     best_val = float('inf')
     
-    dx = (xmax - xmin) * (1 / steps)
-    dy = (ymax - ymin) * (1 / steps)
+    inv_step = 1 / steps
+    dx = (xmax - xmin) * inv_step
+    dy = (ymax - ymin) * inv_step
     
     results = []  
     
@@ -21,10 +20,8 @@ def grid_search(A: Polygon, B: Polygon, Q0: BoundingBox, steps: int) -> Tuple[Po
             x = xmin + i * dx
             y = ymin + j * dy
             
-            shift = Point(x, y)
-            B_shifted = shift_polygon(B, shift)
-            
-            val, _ = hausdorff_with_witness(A, B_shifted)
+            shift = Point(x, y)    
+            val, _ = hausdorff_with_witness(A, B, shift)
             
             results.append((x, y, val))
             

@@ -1,28 +1,31 @@
-from geometry import Point, Polygon
+from geometry import Point
 
 
 def closest_point_on_segment(point: Point, a: Point, b: Point) -> Point:
-    ab = b - a
-    ap = point - a
+    px, py = point.x, point.y
+    ax, ay = a.x, a.y
+    bx, by = b.x, b.y
+
+    ab_x = bx - ax
+    ab_y = by - ay
+
+    ap_x = px - ax
+    ap_y = py - ay
     
-    ab_len_sq = ab.dot(ab)
+    ab_len_sq = ab_x * ab_x + ab_y * ab_y
+   
     if ab_len_sq == 0:
         return a
     
-    t = ap.dot(ab) / ab_len_sq
-    t = max(0.0, min(1.0, t))
+    t = (ap_x * ab_x + ap_y * ab_y) / ab_len_sq
     
-    proj = a + ab * t
-    return proj
+    if t < 0.0:
+        t = 0.0
+    elif t > 1.0:
+        t = 1.0
+    
+    closest_x = ax + ab_x * t
+    closest_y = ay + ab_y * t
 
+    return Point(closest_x, closest_y)
 
-def shift_polygon(polygon: Polygon, x: Point) -> Polygon:
-    return [p + x for p in polygon]
-
-
-if __name__ == "__main__":
-    polygon = [Point(0, 0), Point(1, 1)]
-    x = Point(1, 1)
-
-    polygon = shift_polygon(polygon, x)
-    print(polygon)
