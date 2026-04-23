@@ -1,6 +1,6 @@
 from scipy.spatial import KDTree
 from typing import Tuple, List
-from geometry import Point, Polygon, BoundingBox
+from geometry import Point, Polygon
 from polygon_hausdorff_fast import hausdorff_with_witness
 
 
@@ -9,7 +9,7 @@ def find_optimal_translation_grid(
     B: Polygon, 
     tree_A: KDTree, 
     tree_B: KDTree,  
-    Q0: BoundingBox, 
+    Q0: List[float], 
     steps: int
 ) -> Tuple[Point, float, List[Tuple[float, float, float]]]:
     xmin, xmax, ymin, ymax = Q0 

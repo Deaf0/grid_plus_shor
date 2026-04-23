@@ -24,17 +24,14 @@ B = [
 
 Q0 = initQ0(A, B)
 
-A_rasterize = rasterize_polygon(A, 25)
-B_rasterize = rasterize_polygon(B, 25)
+A_rasterize = rasterize_polygon(A, 50)
+B_rasterize = rasterize_polygon(B, 50)
 
-A_arr = to_array(A)
-B_arr = to_array(B)
+A_tree = KDTree(to_array(A_rasterize))
+B_tree = KDTree(to_array(B_rasterize))
 
-A_tree = KDTree(A_arr)
-B_tree = KDTree(B_arr)
-
-best_x, best_val, points = find_optimal_translation_grid(A_rasterize, B_rasterize, A_tree, B_tree, Q0, 45)
-refine_x, refine_dist = shor_optimize(A, B, A_tree, B_tree, best_x)
+best_x, best_val, points = find_optimal_translation_grid(A_rasterize, B_rasterize, A_tree, B_tree, Q0, 20)
+refine_x, refine_dist = shor_optimize(A_rasterize, B_rasterize, A_tree, B_tree, best_x)
 
 print(best_x, best_val)
 print(refine_x, refine_dist)

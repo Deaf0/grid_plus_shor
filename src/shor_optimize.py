@@ -28,8 +28,8 @@ def shor_optimize(
             hausdorff_distance = distance
             best_x = x.copy()
 
-        dx = q.x - p.x
-        dy = q.y - p.y
+        dx = p.x - q.x
+        dy = p.y - q.y
 
         norm_sq = dx * dx + dy * dy
 
