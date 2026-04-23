@@ -1,12 +1,15 @@
 import math
+from scipy.spatial import KDTree
 from typing import Tuple
 from geometry import Point, Polygon
-from hausdorff_distance import hausdorff_with_witness
+from polygon_hausdorff_fast import hausdorff_with_witness
 
 
 def shor_optimize(
     A: Polygon, 
     B: Polygon, 
+    tree_A: KDTree, 
+    tree_B: KDTree, 
     x0: Point,  
     max_iter: int = 100, 
     alpha0: float = 1.0, 
@@ -18,7 +21,7 @@ def shor_optimize(
     hausdorff_distance = float("inf")
 
     for i in range(1, max_iter + 1):
-        distance, witness = hausdorff_with_witness(A, B, x)
+        distance, witness = hausdorff_with_witness(A, B, tree_A, tree_B, x)
         p, q = witness
 
         if distance < hausdorff_distance:
