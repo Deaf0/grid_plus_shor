@@ -29,7 +29,7 @@ def find_optimal_translation_grid(
             y = ymin + j * dy
             
             shift = Point(x, y)    
-            val, _ = hausdorff_with_witness(A, B, tree_A, tree_B, shift)
+            val, _, _ = hausdorff_with_witness(A, B, tree_A, tree_B, shift)
             
             results.append((x, y, val))
             

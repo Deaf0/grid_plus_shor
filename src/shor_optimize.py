@@ -21,7 +21,7 @@ def shor_optimize(
     hausdorff_distance = float("inf")
 
     for i in range(1, max_iter + 1):
-        distance, witness = hausdorff_with_witness(A, B, tree_A, tree_B, x)
+        distance, witness, source = hausdorff_with_witness(A, B, tree_A, tree_B, x)
         p, q = witness
 
         if distance < hausdorff_distance:
@@ -38,8 +38,12 @@ def shor_optimize(
         
         norm = math.sqrt(norm_sq)
 
-        gx = dx / norm
-        gy = dy / norm
+        if source == "A_to_B":
+            gx = dx / norm
+            gy = dy / norm
+        else:
+            gx = -dx / norm
+            gy = -dy / norm
 
         alpha = alpha0 / math.sqrt(i)
         
