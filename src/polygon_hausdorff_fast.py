@@ -11,6 +11,36 @@ def to_array(polygon: Polygon) -> np.ndarray:
     return np.asarray([(point.x, point.y) for point in polygon], dtype=np.float64)
 
 
+def hausdorff_distances_for_shifts(
+    tree_A: cKDTree,
+    tree_B: cKDTree,
+    A_arr: np.ndarray,
+    B_arr: np.ndarray,
+    shifts_x: np.ndarray,
+    shifts_y: np.ndarray,
+) -> np.ndarray:
+    """Hausdorff(B + shift) для каждого сдвига; A фиксирован, B сдвигается."""
+    sx = np.asarray(shifts_x, dtype=np.float64).ravel()
+    sy = np.asarray(shifts_y, dtype=np.float64).ravel()
+    if sx.size != sy.size:
+        raise ValueError("shifts_x and shifts_y must have the same length")
+
+    n = sx.size
+    max_ab = np.empty(n, dtype=np.float64)
+    max_ba = np.empty(n, dtype=np.float64)
+    offset = np.empty(2, dtype=np.float64)
+
+    for i in range(n):
+        offset[0] = sx[i]
+        offset[1] = sy[i]
+        dists_b, _ = tree_B.query(A_arr - offset)
+        max_ab[i] = float(np.max(dists_b))
+        dists_a, _ = tree_A.query(B_arr + offset)
+        max_ba[i] = float(np.max(dists_a))
+
+    return np.maximum(max_ab, max_ba)
+
+
 def hausdorff_with_witness(
     A: Polygon,
     B: Polygon,
