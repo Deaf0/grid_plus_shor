@@ -14,7 +14,7 @@ def shor_optimize(
     tree_B: cKDTree,
     x0: Point,
     max_iter: int = 100,
-    alpha0: float = 1.0,
+    alpha0: float | None = None,
     eps: float = 1e-8,
 ) -> Tuple[Point, float]:
     A_arr = to_array(A)
@@ -29,6 +29,9 @@ def shor_optimize(
             A, B, tree_A, tree_B, x, A_arr=A_arr, B_arr=B_arr
         )
         p, q = witness
+
+        if alpha0 is None:
+            alpha0 = 0.5 * distance
 
         if distance < hausdorff_distance:
             hausdorff_distance = distance
