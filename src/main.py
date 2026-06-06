@@ -1,6 +1,6 @@
 import numpy as np
 import plotly.graph_objects as go
-from scipy.spatial import KDTree
+from scipy.spatial import cKDTree
 from geometry import Point
 from q0_init import initQ0
 from hausdorff_grid_search import find_optimal_translation_grid
@@ -27,8 +27,8 @@ Q0 = initQ0(A, B)
 A_rasterize = rasterize_polygon(A, 50)
 B_rasterize = rasterize_polygon(B, 50)
 
-A_tree = KDTree(to_array(A_rasterize))
-B_tree = KDTree(to_array(B_rasterize))
+A_tree = cKDTree(to_array(A_rasterize))
+B_tree = cKDTree(to_array(B_rasterize))
 
 best_x, best_val, points = find_optimal_translation_grid(A_rasterize, B_rasterize, A_tree, B_tree, Q0, 20)
 refine_x, refine_dist = shor_optimize(A_rasterize, B_rasterize, A_tree, B_tree, best_x)

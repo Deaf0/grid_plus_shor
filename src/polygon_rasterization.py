@@ -1,54 +1,77 @@
+import os
+from concurrent.futures import ThreadPoolExecutor
+from typing import List, Optional
+
+import numpy as np
+
 from geometry import Point, Polygon, BoundingBox
+from polygon_hausdorff_fast import default_workers
 
 
-def point_in_polygon_xy(px: float, py: float, polygon: Polygon) -> int:
-    inside = False
-    n = len(polygon)
+def _points_in_polygon_batch(px: np.ndarray, py: np.ndarray, verts: np.ndarray) -> np.ndarray:
+    """Векторизованный ray casting; px, py — 1D, verts — (n, 2)."""
+    n = len(verts)
+    inside = np.zeros(px.shape, dtype=bool)
+    x = verts[:, 0]
+    y = verts[:, 1]
 
     for i in range(n):
-        a = polygon[i]
-        b = polygon[(i + 1) % n]
+        j = (i + 1) % n
+        xi, yi = x[i], y[i]
+        xj, yj = x[j], y[j]
+        denom = yj - yi
+        slope = np.zeros_like(denom, dtype=np.float64)
+        np.divide(xj - xi, denom, out=slope, where=np.abs(denom) > 1e-30)
+        cond = ((yi > py) != (yj > py)) & (px < slope * (py - yi) + xi)
+        inside ^= cond
 
-        ax, ay = a.x, a.y
-        bx, by = b.x, b.y
-
-        cross = (px - ax) * (by - ay) - (py - ay) * (bx - ax)
-        if abs(cross) < 1e-9:
-            dot = (px - ax) * (px - bx) + (py - ay) * (py - by)
-            if dot <= 1e-9:
-                return -1
-
-        if (ay > py) != (by > py):
-            x_intersection = (bx - ax) * (py - ay) / (by - ay) + ax
-            if px < x_intersection:
-                inside = not inside
-
-    return 1 if inside else 0
+    return inside
 
 
-def rasterize_polygon(polygon: Polygon, num_per_string: int) -> Polygon:
+def _rasterize_chunk(
+    polygon: Polygon,
+    verts: np.ndarray,
+    xs: np.ndarray,
+    ys: np.ndarray,
+) -> List[Point]:
+    grid_x, grid_y = np.meshgrid(xs, ys, indexing="ij")
+    px = grid_x.ravel()
+    py = grid_y.ravel()
+    mask = _points_in_polygon_batch(px, py, verts)
+    return [Point(float(px[k]), float(py[k])) for k in np.flatnonzero(mask)]
+
+
+def rasterize_polygon(
+    polygon: Polygon,
+    num_per_string: int,
+    *,
+    workers: Optional[int] = None,
+) -> Polygon:
     bounding_box = BoundingBox(polygon)
-
     min_x, max_x = bounding_box.min.x, bounding_box.max.x
     min_y, max_y = bounding_box.min.y, bounding_box.max.y
 
-    dx = (max_x - min_x) / (num_per_string - 1)
-    dy = (max_y - min_y) / (num_per_string - 1)
+    xs = np.linspace(min_x, max_x, num_per_string, dtype=np.float64)
+    ys = np.linspace(min_y, max_y, num_per_string, dtype=np.float64)
+    verts = np.asarray([(p.x, p.y) for p in polygon], dtype=np.float64)
 
-    result = []
+    n_workers = workers if workers is not None else default_workers()
+    if n_workers <= 1 or num_per_string < 64:
+        return _rasterize_chunk(polygon, verts, xs, ys)
 
-    x = min_x
-    for i in range(num_per_string):
-        y = min_y
-        for j in range(num_per_string):
-            status = point_in_polygon_xy(x, y, polygon)
+    n_slices = min(n_workers, num_per_string)
+    x_chunks = np.array_split(xs, n_slices)
+    y_chunks = [ys] * n_slices
 
-            if status != 0:
-                result.append(Point(x, y))
+    with ThreadPoolExecutor(max_workers=n_slices) as pool:
+        parts = pool.map(
+            lambda args: _rasterize_chunk(polygon, verts, args[0], args[1]),
+            zip(x_chunks, y_chunks),
+        )
 
-            y += dy
-        x += dx
-
+    result: List[Point] = []
+    for part in parts:
+        result.extend(part)
     return result
 
 
@@ -58,8 +81,6 @@ if __name__ == "__main__":
         Point(5, 1),
         Point(5, 3),
         Point(4, 2),
-        Point(3, 3)
-        ]
-    
-    rasterize_polygon = rasterize_polygon(polygon, 10)
-    print(rasterize_polygon)
+        Point(3, 3),
+    ]
+    print(rasterize_polygon(polygon, 10))
