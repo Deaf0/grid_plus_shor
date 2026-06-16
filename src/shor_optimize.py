@@ -47,12 +47,8 @@ def shor_optimize(
         norm = math.sqrt(norm_sq)
         inv_norm = 1.0 / norm
 
-        if source == "A_to_B":
-            gx = dx * inv_norm
-            gy = dy * inv_norm
-        else:
-            gx = -dx * inv_norm
-            gy = -dy * inv_norm
+        gx = -dx * inv_norm
+        gy = -dy * inv_norm
 
         alpha = alpha0 / math.sqrt(i)
         x.x -= gx * alpha
