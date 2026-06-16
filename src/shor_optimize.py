@@ -14,8 +14,8 @@ def shor_optimize(
     tree_B: cKDTree,
     x0: Point,
     max_iter: int = 100,
+    alpha0: float | None = None,
     eps: float = 1e-8,
-    alpha0: float | None = None 
 ) -> Tuple[Point, float]:
     A_arr = to_array(A)
     B_arr = to_array(B)
@@ -47,12 +47,8 @@ def shor_optimize(
         norm = math.sqrt(norm_sq)
         inv_norm = 1.0 / norm
 
-        if source == "A_to_B":
-            gx = dx * inv_norm
-            gy = dy * inv_norm
-        else:
-            gx = -dx * inv_norm
-            gy = -dy * inv_norm
+        gx = -dx * inv_norm
+        gy = -dy * inv_norm
 
         alpha = alpha0 / math.sqrt(i)
         x.x -= gx * alpha
